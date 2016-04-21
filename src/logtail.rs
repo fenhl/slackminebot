@@ -11,8 +11,8 @@ pub struct LogTail<'a> {
     pos: u64
 }
 
-impl<'a> From<&'a Path> for LogTail<'a> {
-    fn from(path: &'a Path) -> LogTail<'a> {
+impl<'a, P: ?Sized> From<&'a P> for LogTail<'a> where P: AsRef<Path> {
+    fn from(path: &'a P) -> LogTail<'a> {
         LogTail {
             path: path.as_ref(),
             file: None,

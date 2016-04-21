@@ -1,10 +1,15 @@
 #![warn(trivial_casts)]
 #![forbid(unused, unused_extern_crates, unused_import_braces, unused_qualifications)]
 
+extern crate hyper;
 extern crate slack;
 extern crate serde_json;
 
 mod logtail;
+
+use std::thread;
+
+use logtail::LogTail;
 
 struct SlackHandler {
     will_exit: bool
@@ -81,7 +86,27 @@ fn main() {
         }
     };
     let mut cli = slack::RtmClient::new(&api_key);
-    cli.login_and_run(&mut SlackHandler::default()).unwrap();
-    println!("{}", cli.get_name().unwrap());
-    println!("{}", cli.get_team().unwrap().name);
+    let slack_rtm_thread = thread::spawn(move || cli.login_and_run(&mut SlackHandler::default()).unwrap());
+    thread::spawn(move || {
+        let client = hyper::Client::new();
+        for msg_result in LogTail::from("/opt/wurstmineberg/world/wurstmineberg/logs/latest.log") {
+            let msg = msg_result.unwrap();
+            slack::api::chat::post_message(
+                &client,
+                &api_key,
+                "#wurstminebot-test",
+                &msg,
+                None, // username
+                Some(false), // send message as authed user instead of bot
+                Some("full".into()), // treat message as unformatted
+                Some(true), // linkify @usernames and #channel-names
+                None, // attachments
+                Some(false), // unfurl links
+                Some(false), // unfurl media
+                None, // avatar URL
+                None // avatar emoji
+            ).unwrap();
+        }
+    });
+    slack_rtm_thread.join().unwrap();
 }
