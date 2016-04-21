@@ -96,14 +96,14 @@ fn main() {
                 &api_key,
                 "#wurstminebot-test",
                 &msg,
-                None, // username
+                Some("wurstminebot".into()), // username
                 Some(false), // send message as authed user instead of bot
                 Some("full".into()), // treat message as unformatted
                 Some(true), // linkify @usernames and #channel-names
                 None, // attachments
                 Some(false), // unfurl links
                 Some(false), // unfurl media
-                None, // avatar URL
+                Some("https://assets.wurstmineberg.de/img/logo/wurstpick-white.png".into()), // avatar URL
                 None // avatar emoji
             ).unwrap();
         }
